@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <title>JWT Store Local Storage</title>
+</head>
+<body>
+  <div
+    class="fb-like"
+    data-share="true"
+    data-width="450"
+    data-show-faces="true">
+  </div>
+
+  <h1>Test</h1>
+  <ul>
+    <li><a id="signup" href="#">Signup</a></li>
+    <li><a id="login" href="#">Login</a></li>
+    <li><a id="show" href="#">Show JWT Token</a></li>
+    <li><a id="api_noheader" href="#">API Fail call</a></li>
+    <li><a id="api_header" href="#">API Success call</a></li>
+  </ul>
+
+  <script>
+    $(document).ready(function() {
+      $.ajaxSetup({
+        cache: true
+      });
+
+      $.getScript('//connect.facebook.net/en_US/sdk.js', function() {
+        FB.init({
+          appId: '269423113444666',
+          version: 'v2.7',
+          status: true,
+          xfbml: true
+        });
+
+        try{
+          FB.XFBML.parse();
+        } catch(ex){}
+      });
+
+      $('#signup').click(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+          url: 'http://localhost:5000/api/signup',
+          type: 'POST',
+          data: { email: "boy@test.com", password: "boyboy" }
+        }).done(signupSuccess)
+          .fail(failResponse);
+      });
+
+      $('#login').click(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+          url: 'http://localhost:5000/api/login',
+          type: 'POST',
+          data: { email: "boy@test.com", password: "boyboy" }
+        }).done(loginSuccess)
+          .fail(failResponse);
+      });
+
+      $('#show').click(function(e) {
+        e.preventDefault();
+
+        alert( localStorage.getItem('jwt_token') );
+      });
+
+      $('#api_noheader').click(function(e) {
+        $.ajax({
+          url: 'http://localhost:5000/api/movies',
+          type: 'GET'
+        }).done(successResponse)
+          .fail(failResponse);
+      });
+
+      $('#api_header').click(function(e) {
+        $.ajax({
+          url: 'http://localhost:5000/api/actors',
+          type: 'GET',
+          headers: {
+            "Authorization": "Bearer " + localStorage.getItem('jwt_token')
+          }
+        }).done(successResponse)
+          .fail(failResponse);
+      });
+
+      function updateStatusCallback(response) {
+        if (response.status === 'connected') {
+          console.log('Logged in.', response);
+          $('h1').text(response.status);
+        }
+        else {
+          FB.login();
+        }
+      }
+
+      function signupSuccess() {
+        alert('success signup');
+      }
+
+      function loginSuccess(res) {
+        alert('success login');
+        console.log(res);
+        localStorage.setItem('jwt_token', res);
+      }
+
+      function successResponse(res) {
+        alert('successResponse');
+        console.log(res);
+      }
+
+      function failResponse() {
+        alert('fail');
+      }
+    });
+  </script>
+</body>
